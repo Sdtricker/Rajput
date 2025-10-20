@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - RAJPUT OSINT</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        @keyframes gradient-shift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+        }
+
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 25px rgba(255, 107, 53, 0.5); }
+            50% { box-shadow: 0 0 50px rgba(255, 107, 53, 0.9); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #FFF5F0 0%, #FFE8DC 50%, #FFF5F0 100%);
+            background-size: 400% 400%;
+            animation: gradient-shift 15s ease infinite;
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('Tech_pattern_background_b8ffb99b.png');
+            background-size: cover;
+            background-position: center;
+            opacity: 0.03;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .login-card {
+            background: white;
+            border-radius: 30px;
+            padding: 65px;
+            box-shadow: 0 30px 80px rgba(255, 107, 53, 0.25);
+            max-width: 550px;
+            margin: 100px auto;
+            border: 3px solid #FFE8DC;
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 0.6s ease;
+        }
+
+        .login-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, #FF6B35 0%, #FF8C42 50%, #FF6B35 100%);
+            background-size: 200% 100%;
+            animation: gradient-shift 3s ease infinite;
+        }
+
+        .login-icon {
+            text-align: center;
+            font-size: 85px;
+            margin-bottom: 30px;
+            filter: drop-shadow(0 5px 12px rgba(255, 107, 53, 0.4));
+            animation: float 4s ease-in-out infinite;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 45px;
+            background: linear-gradient(135deg, #FF6B35 0%, #FF8C42 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 48px;
+            font-weight: 900;
+            letter-spacing: -1px;
+        }
+
+        h2 {
+            color: #FF6B35;
+            margin-bottom: 32px;
+            font-size: 30px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .form-group {
+            margin-bottom: 30px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 14px;
+            font-weight: 700;
+            color: #333;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        label::before {
+            content: '🔸';
+            font-size: 18px;
+        }
+
+        input, button {
+            width: 100%;
+            padding: 18px 25px;
+            border: 3px solid #FFE8DC;
+            border-radius: 18px;
+            font-size: 17px;
+            font-family: 'Poppins', sans-serif;
+            transition: all 0.3s;
+        }
+
+        input {
+            background: white;
+            color: #333;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #FF6B35;
+            box-shadow: 0 0 0 5px rgba(255, 107, 53, 0.12);
+            background: #FFF5F0;
+            transform: translateY(-2px);
+        }
+
+        button {
+            background: linear-gradient(135deg, #FF6B35 0%, #FF8C42 100%);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 800;
+            margin-top: 18px;
+            box-shadow: 0 10px 30px rgba(255, 107, 53, 0.4);
+            font-size: 18px;
+        }
+
+        button:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 15px 40px rgba(255, 107, 53, 0.5);
+        }
+
+        .admin-content {
+            display: none;
+        }
+
+        .header {
+            background: white;
+            border-radius: 30px;
+            padding: 40px 50px;
+            box-shadow: 0 20px 60px rgba(255, 107, 53, 0.18);
+            margin-bottom: 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 3px solid #FFE8DC;
+            animation: fadeInUp 0.6s ease;
+        }
+
+        .header h1 {
+            margin: 0;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .header h1::before {
+            content: '🛡️';
+            font-size: 55px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 25px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(255, 107, 53, 0.18);
+            text-align: center;
+            border: 3px solid #FFE8DC;
+            transition: all 0.4s;
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 0.8s ease both;
+        }
+
+        .stat-card:nth-child(1) { animation-delay: 0.1s; }
+        .stat-card:nth-child(2) { animation-delay: 0.2s; }
+        .stat-card:nth-child(3) { animation-delay: 0.3s; }
+        .stat-card:nth-child(4) { animation-delay: 0.4s; }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #FF6B35 0%, #FF8C42 100%);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 25px 70px rgba(255, 107, 53, 0.28);
+        }
+
+        .stat-icon {
+            font-size: 65px;
+            margin-bottom: 18px;
+            filter: drop-shadow(0 3px 6px rgba(255, 107, 53, 0.3));
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .stat-card:nth-child(2) .stat-icon { animation-delay: 0.5s; }
+        .stat-card:nth-child(3) .stat-icon { animation-delay: 1s; }
+        .stat-card:nth-child(4) .stat-icon { animation-delay: 1.5s; }
+
+        .stat-label {
+            color: #666;
+            font-size: 16px;
+            margin-bottom: 14px;
+            font-weight: 600;
+        }
+
+        .stat-value {
+            font-size: 50px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #FF6B35 0%, #FF8C42 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .section {
+            background: white;
+            border-radius: 30px;
+            padding: 50px;
+            box-shadow: 0 20px 60px rgba(255, 107, 53, 0.18);
+            margin-bottom: 40px;
+            border: 3px solid #FFE8DC;
+            animation: fadeInUp 0.8s ease both;
+        }
+
+        .error, .success {
+            padding: 25px 30px;
+            border-radius: 18px;
+            margin-top: 25px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            animation: fadeInUp 0.4s ease;
+        }
+
+        .error {
+            background: linear-gradient(135deg, #FFE8E8 0%, #FFCCCC 100%);
+            border-left: 6px solid #FF4444;
+            color: #CC0000;
+        }
+
+        .error::before {
+            content: '⚠️';
+            font-size: 28px;
+        }
+
+        .success {
+            background: linear-gradient(135deg, #E8FFE8 0%, #CCFFCC 100%);
+            border-left: 6px solid #44CC44;
+            color: #007700;
+        }
+
+        .success::before {
+            content: '✅';
+            font-size: 28px;
+        }
+
+        .code-list {
+            margin-top: 32px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .code-item {
+            background: linear-gradient(135deg, #FFF5F0 0%, #FFE8DC 100%);
+            padding: 28px;
+            margin-bottom: 20px;
+            border-radius: 20px;
+            border-left: 6px solid #FF6B35;
+            transition: all 0.3s;
+        }
+
+        .code-item:hover {
+            transform: translateX(8px);
+            box-shadow: 0 8px 25px rgba(255, 107, 53, 0.25);
+        }
+
+        .code-item.used {
+            opacity: 0.6;
+            border-left-color: #ccc;
+            background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+        }
+
+        .logout-btn {
+            background: linear-gradient(135deg, #FF4444 0%, #CC0000 100%);
+            padding: 16px 36px;
+            font-size: 17px;
+            width: auto;
+        }
+
+        .logout-btn:hover {
+            box-shadow: 0 12px 35px rgba(255, 68, 68, 0.45);
+        }
+
+        ::-webkit-scrollbar {
+            width: 12px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #FFE8DC;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #FF6B35 0%, #FF8C42 100%);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="loginForm" class="login-card">
+            <div class="login-icon">🔐</div>
+            <h1>RAJPUT OSINT</h1>
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" id="username" placeholder="Enter admin username">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="password" placeholder="Enter admin password">
+            </div>
+            <button onclick="login()">🔓 Access Dashboard</button>
+            <div id="loginMessage"></div>
+        </div>
+
+        <div id="adminContent" class="admin-content">
+            <div class="header">
+                <h1>Admin Control Panel</h1>
+                <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+            </div>
+
+            <div class="stats-grid" id="stats"></div>
+
+            <div class="section">
+                <h2>🔑 Update API Key</h2>
+                <div class="form-group">
+                    <label>New API Key</label>
+                    <input type="text" id="apiKey" placeholder="Enter new API key">
+                </div>
+                <button onclick="updateApiKey()">💾 Save API Key</button>
+                <div id="apiKeyMessage"></div>
+            </div>
+
+            <div class="section">
+                <h2>🎟️ Generate Redeem Code</h2>
+                <div class="form-group">
+                    <label>Code Name</label>
+                    <input type="text" id="codeText" placeholder="e.g., PREMIUM2024">
+                </div>
+                <div class="form-group">
+                    <label>Points</label>
+                    <input type="number" id="codePoints" placeholder="e.g., 100" min="1">
+                </div>
+                <button onclick="generateCode()">✨ Create Code</button>
+                <div id="codeMessage"></div>
+            </div>
+
+            <div class="section">
+                <h2>📋 Redeem Codes List</h2>
+                <button onclick="loadRedeemCodes()">🔄 Refresh List</button>
+                <div id="codeList" class="code-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const messageDiv = document.getElementById('loginMessage');
+
+            try {
+                const response = await fetch('/api/admin/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    document.getElementById('loginForm').style.display = 'none';
+                    document.getElementById('adminContent').style.display = 'block';
+                    loadStats();
+                    loadRedeemCodes();
+                } else {
+                    messageDiv.innerHTML = '<div class="error">' + (data.error || 'Login failed') + '</div>';
+                }
+            } catch (error) {
+                messageDiv.innerHTML = '<div class="error">Network error: ' + error.message + '</div>';
+            }
+        }
+
+        async function logout() {
+            try {
+                await fetch('/api/admin/logout', { method: 'POST' });
+                document.getElementById('loginForm').style.display = 'block';
+                document.getElementById('adminContent').style.display = 'none';
+                document.getElementById('username').value = '';
+                document.getElementById('password').value = '';
+                document.getElementById('loginMessage').innerHTML = '';
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+        }
+
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/admin/stats');
+                const data = await response.json();
+
+                if (response.ok) {
+                    const statsDiv = document.getElementById('stats');
+                    statsDiv.innerHTML = `
+                        <div class="stat-card">
+                            <div class="stat-icon">👥</div>
+                            <div class="stat-label">Total Users</div>
+                            <div class="stat-value">${data.total_users}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">🔍</div>
+                            <div class="stat-label">Total Searches</div>
+                            <div class="stat-value">${data.total_searches}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">💎</div>
+                            <div class="stat-label">Credits Used</div>
+                            <div class="stat-value">${data.total_credits_used}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">🎫</div>
+                            <div class="stat-label">Redeem Codes</div>
+                            <div class="stat-value">${data.used_redeem_codes}/${data.total_redeem_codes}</div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        async function updateApiKey() {
+            const apiKey = document.getElementById('apiKey').value.trim();
+            const messageDiv = document.getElementById('apiKeyMessage');
+
+            if (!apiKey) {
+                messageDiv.innerHTML = '<div class="error">API key cannot be empty!</div>';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/admin/update-api-key', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ api_key: apiKey })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    messageDiv.innerHTML = '<div class="success">API key updated successfully!</div>';
+                    document.getElementById('apiKey').value = '';
+                    loadStats();
+                } else {
+                    messageDiv.innerHTML = '<div class="error">' + (data.error || 'Update failed') + '</div>';
+                }
+            } catch (error) {
+                messageDiv.innerHTML = '<div class="error">Network error: ' + error.message + '</div>';
+            }
+        }
+
+        async function generateCode() {
+            const code = document.getElementById('codeText').value.trim().toUpperCase();
+            const points = document.getElementById('codePoints').value;
+            const messageDiv = document.getElementById('codeMessage');
+
+            if (!code || !points) {
+                messageDiv.innerHTML = '<div class="error">Both code and points are required!</div>';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/admin/generate-code', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ code, points: parseInt(points) })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    messageDiv.innerHTML = '<div class="success">Code generated: ' + data.code + ' (' + data.points + ' points)</div>';
+                    document.getElementById('codeText').value = '';
+                    document.getElementById('codePoints').value = '';
+                    loadStats();
+                    loadRedeemCodes();
+                } else {
+                    messageDiv.innerHTML = '<div class="error">' + (data.error || 'Generation failed') + '</div>';
+                }
+            } catch (error) {
+                messageDiv.innerHTML = '<div class="error">Network error: ' + error.message + '</div>';
+            }
+        }
+
+        async function loadRedeemCodes() {
+            try {
+                const response = await fetch('/api/admin/redeem-codes');
+                const data = await response.json();
+
+                if (response.ok) {
+                    const listDiv = document.getElementById('codeList');
+                    if (data.codes.length === 0) {
+                        listDiv.innerHTML = '<div class="error">No redeem codes yet</div>';
+                    } else {
+                        listDiv.innerHTML = data.codes.map(code => `
+                            <div class="code-item ${code.used ? 'used' : ''}">
+                                <strong>🎫 Code:</strong> ${code.code}<br>
+                                <strong>💎 Points:</strong> ${code.points}<br>
+                                <strong>📊 Status:</strong> ${code.used ? '✅ USED' : '⏳ AVAILABLE'}<br>
+                                ${code.used ? `<strong>👤 Used by:</strong> ${code.used_by}<br><strong>📅 Used at:</strong> ${code.used_at}` : ''}
+                            </div>
+                        `).join('');
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading codes:', error);
+            }
+        }
+
+        document.getElementById('password').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                login();
+            }
+        });
+    </script>
+</body>
+</html>

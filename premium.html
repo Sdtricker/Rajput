@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium Plans - RAJPUT OSINT</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        @keyframes gradient-shift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes shine {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #FFF5F0 0%, #FFE8DC 50%, #FFF5F0 100%);
+            background-size: 400% 400%;
+            animation: gradient-shift 15s ease infinite;
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('Tech_pattern_background_b8ffb99b.png');
+            background-size: cover;
+            background-position: center;
+            opacity: 0.03;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 17px 38px;
+            background: white;
+            color: #FF6B35;
+            text-decoration: none;
+            border-radius: 18px;
+            font-weight: 800;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 30px rgba(255, 107, 53, 0.25);
+            transition: all 0.3s;
+            border: 3px solid #FFE8DC;
+            font-size: 17px;
+            animation: fadeInUp 0.6s ease;
+        }
+
+        .back-btn::before {
+            content: '←';
+            font-size: 22px;
+        }
+
+        .back-btn:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 15px 40px rgba(255, 107, 53, 0.35);
+            border-color: #FF6B35;
+        }
+
+        .hero {
+            background: white;
+            border-radius: 30px;
+            padding: 80px 70px;
+            text-align: center;
+            box-shadow: 0 25px 70px rgba(255, 107, 53, 0.18);
+            margin-bottom: 50px;
+            border: 3px solid #FFE8DC;
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 0.8s ease;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, #FF6B35 0%, #FF8C42 50%, #FF6B35 100%);
+            background-size: 200% 100%;
+            animation: gradient-shift 3s ease infinite;
+        }
+
+        .premium-badge {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 25px;
+            animation: float 4s ease-in-out infinite;
+        }
+
+        .premium-badge img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            filter: drop-shadow(0 5px 15px rgba(255, 107, 53, 0.4));
+        }
+
+        h1 {
+            font-size: 62px;
+            font-weight: 900;
+            margin-bottom: 25px;
+            background: linear-gradient(135deg, #FF6B35 0%, #FF8C42 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -2px;
+        }
+
+        .subtitle {
+            font-size: 20px;
+            color: #666;
+            line-height: 1.8;
+            font-weight: 500;
+        }
+
+        .features {
+            background: white;
+            border-radius: 30px;
+            padding: 55px;
+            box-shadow: 0 25px 70px rgba(255, 107, 53, 0.18);
+            margin-bottom: 50px;
+            border: 3px solid #FFE8DC;
+            animation: fadeInUp 0.8s ease 0.2s both;
+        }
+
+        .features h2 {
+            color: #FF6B35;
+            margin-bottom: 40px;
+            font-size: 42px;
+            font-weight: 900;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 18px;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 28px;
+        }
+
+        .feature-item {
+            padding: 32px;
+            background: linear-gradient(135deg, #FFF5F0 0%, #FFE8DC 100%);
+            border-radius: 22px;
+            border-left: 6px solid #FF6B35;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            font-weight: 600;
+        }
+
+        .feature-item:hover {
+            transform: translateX(12px) scale(1.02);
+            box-shadow: 0 10px 30px rgba(255, 107, 53, 0.25);
+        }
+
+        .feature-item strong {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 20px;
+            color: #FF6B35;
+            margin-bottom: 10px;
+        }
+
+        .plans-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 40px;
+            margin-bottom: 50px;
+        }
+
+        .plan-card {
+            background: white;
+            border-radius: 30px;
+            padding: 50px 40px;
+            text-align: center;
+            box-shadow: 0 25px 70px rgba(255, 107, 53, 0.18);
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            position: relative;
+            overflow: hidden;
+            border: 3px solid #FFE8DC;
+            animation: fadeInUp 0.8s ease both;
+            cursor: pointer;
+        }
+
+        .plan-card:nth-child(1) { animation-delay: 0.3s; }
+        .plan-card:nth-child(2) { animation-delay: 0.4s; }
+        .plan-card:nth-child(3) { animation-delay: 0.5s; }
+        .plan-card:nth-child(4) { animation-delay: 0.6s; }
+
+        .plan-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, #FF6B35 0%, #FF8C42 100%);
+        }
+
+        .plan-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .plan-card:hover::after {
+            left: 100%;
+        }
+
+        .plan-card:hover {
+            transform: translateY(-15px) scale(1.03);
+            box-shadow: 0 30px 80px rgba(255, 107, 53, 0.28);
+            border-color: #FF6B35;
+        }
+
+        .plan-icon {
+            font-size: 75px;
+            margin-bottom: 25px;
+            filter: drop-shadow(0 3px 8px rgba(255, 107, 53, 0.35));
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .plan-card:nth-child(2) .plan-icon { animation-delay: 0.3s; }
+        .plan-card:nth-child(3) .plan-icon { animation-delay: 0.6s; }
+        .plan-card:nth-child(4) .plan-icon { animation-delay: 0.9s; }
+
+        .plan-name {
+            font-size: 32px;
+            font-weight: 900;
+            color: #333;
+            margin-bottom: 25px;
+        }
+
+        .plan-credits {
+            font-size: 68px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #FF6B35 0%, #FF8C42 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+            line-height: 1;
+        }
+
+        .plan-credits-label {
+            font-size: 18px;
+            color: #999;
+            margin-bottom: 28px;
+            font-weight: 700;
+        }
+
+        .plan-price {
+            font-size: 50px;
+            font-weight: 900;
+            color: #FF6B35;
+            margin-bottom: 25px;
+        }
+
+        .plan-desc {
+            color: #666;
+            line-height: 1.8;
+            font-weight: 600;
+        }
+
+        .contact-section {
+            background: white;
+            border-radius: 30px;
+            padding: 70px 60px;
+            text-align: center;
+            box-shadow: 0 25px 70px rgba(255, 107, 53, 0.18);
+            border: 3px solid #FFE8DC;
+            animation: fadeInUp 0.8s ease 0.7s both;
+        }
+
+        .contact-section h2 {
+            color: #FF6B35;
+            margin-bottom: 30px;
+            font-size: 42px;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 18px;
+        }
+
+        .contact-intro {
+            font-size: 21px;
+            color: #666;
+            margin-bottom: 35px;
+            font-weight: 600;
+        }
+
+        .whatsapp-number {
+            font-size: 48px;
+            font-weight: 900;
+            color: #25D366;
+            margin: 40px 0;
+            padding: 30px;
+            background: linear-gradient(135deg, #E8FFF0 0%, #CCF5E0 100%);
+            border-radius: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            border: 3px solid #CCF5E0;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .whatsapp-number::before {
+            content: '📱';
+            font-size: 55px;
+        }
+
+        .whatsapp-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 15px;
+            padding: 25px 70px;
+            background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 22px;
+            font-weight: 900;
+            font-size: 22px;
+            box-shadow: 0 15px 40px rgba(37, 211, 102, 0.4);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .whatsapp-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .whatsapp-btn:hover::before {
+            width: 400px;
+            height: 400px;
+        }
+
+        .whatsapp-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 50px rgba(37, 211, 102, 0.5);
+        }
+
+        .whatsapp-icon {
+            font-size: 30px;
+        }
+
+        .note {
+            margin-top: 45px;
+            color: #666;
+            line-height: 2.2;
+            font-size: 17px;
+            background: linear-gradient(135deg, #FFF5F0 0%, #FFE8DC 100%);
+            padding: 35px;
+            border-radius: 22px;
+            border: 3px solid #FFE8DC;
+        }
+
+        .note strong {
+            color: #FF6B35;
+            font-size: 24px;
+            display: block;
+            margin-bottom: 20px;
+        }
+
+        .note-steps {
+            text-align: left;
+            max-width: 650px;
+            margin: 0 auto;
+        }
+
+        .note-step {
+            margin: 15px 0;
+            padding-left: 15px;
+            font-weight: 600;
+        }
+
+        ::-webkit-scrollbar {
+            width: 12px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #FFE8DC;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #FF6B35 0%, #FF8C42 100%);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/" class="back-btn">Back to Home</a>
+
+        <div class="hero">
+            <div class="premium-badge">
+                <img src="Premium_badge_icon_382f0841.png" alt="Premium Badge">
+            </div>
+            <h1>Premium Plans</h1>
+            <p class="subtitle">Unlock unlimited access to comprehensive OSINT investigations with our affordable premium plans designed for professionals and researchers</p>
+        </div>
+
+        <div class="features">
+            <h2>💎 Premium Benefits</h2>
+            <div class="feature-grid">
+                <div class="feature-item">
+                    <strong>🔍 Unlimited Searches</strong><br>
+                    Get extensive credits for unlimited investigations
+                </div>
+                <div class="feature-item">
+                    <strong>📊 Comprehensive Data</strong><br>
+                    Access detailed OSINT information and reports
+                </div>
+                <div class="feature-item">
+                    <strong>📱 Multi-Source Search</strong><br>
+                    Phone, email, username, and vehicle lookups
+                </div>
+                <div class="feature-item">
+                    <strong>⏰ Lifetime Access</strong><br>
+                    No expiration - use credits anytime
+                </div>
+                <div class="feature-item">
+                    <strong>💬 Priority Support</strong><br>
+                    Direct assistance from admin team
+                </div>
+                <div class="feature-item">
+                    <strong>🎓 Professional Tools</strong><br>
+                    Perfect for research and investigation work
+                </div>
+            </div>
+        </div>
+
+        <div class="plans-grid">
+            <div class="plan-card">
+                <div class="plan-icon">🥉</div>
+                <div class="plan-name">Starter</div>
+                <div class="plan-credits">30</div>
+                <div class="plan-credits-label">Credits</div>
+                <div class="plan-price">₹60</div>
+                <div class="plan-desc">Perfect for occasional searches and beginners</div>
+            </div>
+
+            <div class="plan-card">
+                <div class="plan-icon">🥈</div>
+                <div class="plan-name">Basic</div>
+                <div class="plan-credits">120</div>
+                <div class="plan-credits-label">Credits</div>
+                <div class="plan-price">₹120</div>
+                <div class="plan-desc">Great value for regular users and researchers</div>
+            </div>
+
+            <div class="plan-card">
+                <div class="plan-icon">🥇</div>
+                <div class="plan-name">Pro</div>
+                <div class="plan-credits">500</div>
+                <div class="plan-credits-label">Credits</div>
+                <div class="plan-price">₹500</div>
+                <div class="plan-desc">Best for power users and professionals</div>
+            </div>
+
+            <div class="plan-card">
+                <div class="plan-icon">💎</div>
+                <div class="plan-name">Ultimate</div>
+                <div class="plan-credits">3000</div>
+                <div class="plan-credits-label">Credits</div>
+                <div class="plan-price">₹3000</div>
+                <div class="plan-desc">Maximum value for extensive investigations</div>
+            </div>
+        </div>
+
+        <div class="contact-section">
+            <h2>📲 Get Your Premium Access</h2>
+            <p class="contact-intro">
+                Contact us on WhatsApp to purchase any plan and receive your instant activation code!
+            </p>
+            <div class="whatsapp-number">+91 9700079107</div>
+            <a href="https://wa.me/919700079107" target="_blank" class="whatsapp-btn">
+                <span class="whatsapp-icon">💬</span>
+                Contact on WhatsApp
+            </a>
+            <div class="note">
+                <strong>🎯 Simple Activation Process:</strong>
+                <div class="note-steps">
+                    <div class="note-step">1️⃣ Message us on WhatsApp with your chosen plan</div>
+                    <div class="note-step">2️⃣ Complete the secure payment process</div>
+                    <div class="note-step">3️⃣ Receive your unique activation code instantly</div>
+                    <div class="note-step">4️⃣ Enter the code on homepage to unlock credits!</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
