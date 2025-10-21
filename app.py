@@ -9,7 +9,8 @@ from flask import Flask, request, jsonify, session, send_file
 app = Flask(__name__)
 app.secret_key = os.environ.get('SESSION_SECRET', 'default-secret-key-change-me')
 
-DATA_FILE = "data.json"
+DATA_FILE = "/tmp/data.json"
+BACKUP_FILE = "data.json"
 DEFAULT_API_KEY = "7658050410:3GTVV630"
 API_URL = "https://leakosintapi.com/"
 STARTING_CREDITS = 3
