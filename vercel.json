@@ -1,13 +1,5 @@
 {
-  "version": 2,
-  "routes": [
-    {
-      "src": "/(.*\\.(css|js|png|jpg|jpeg|gif|svg|ico|html))",
-      "dest": "/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/"
-    }
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/app.py" }
   ]
 }
