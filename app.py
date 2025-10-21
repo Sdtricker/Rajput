@@ -1,13 +1,17 @@
-import json
 import os
 import requests
 from datetime import datetime
 from flask import Flask, request, jsonify, session, send_from_directory
+from supabase import create_client, Client
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SESSION_SECRET', 'default-secret-key-change-me-vercel-2024')
 
-DATA_FILE = "/tmp/data.json"
+SUPABASE_URL = os.environ.get('VITE_SUPABASE_URL', 'https://yxitwgdmfjixhuvictjx.supabase.co')
+SUPABASE_KEY = os.environ.get('VITE_SUPABASE_ANON_KEY', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl4aXR3Z2RtZmppeGh1dmljdGp4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEwNTIwNTEsImV4cCI6MjA3NjYyODA1MX0.GbuxGENCj_mB14tKsj7BULyJiJdxJsU5zrMsp1Gka4Q')
+
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
 DEFAULT_API_KEY = "7658050410:3GTVV630"
 API_URL = "https://leakosintapi.com/"
 STARTING_CREDITS = 3
@@ -16,37 +20,21 @@ CREDIT_COST = 1
 ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'jao0wo383+_(#)')
 
-def load_data():
-    if not os.path.exists(DATA_FILE):
-        return {
-            "users": {},
-            "redeem_codes": {},
-            "api_key": os.environ.get('LEAKOSINT_API_KEY', DEFAULT_API_KEY),
-            "total_searches": 0
-        }
+def get_api_key():
     try:
-        with open(DATA_FILE, "r") as f:
-            data = json.load(f)
-            if "total_searches" not in data:
-                data["total_searches"] = 0
-            if "api_key" not in data:
-                data["api_key"] = os.environ.get('LEAKOSINT_API_KEY', DEFAULT_API_KEY)
-            return data
+        response = supabase.table('app_settings').select('value').eq('key', 'api_key').maybeSingle().execute()
+        if response.data:
+            return response.data['value']
     except:
-        return {
-            "users": {},
-            "redeem_codes": {},
-            "api_key": os.environ.get('LEAKOSINT_API_KEY', DEFAULT_API_KEY),
-            "total_searches": 0
-        }
+        pass
+    return DEFAULT_API_KEY
 
-def save_data(data):
+def set_api_key(api_key):
     try:
-        os.makedirs(os.path.dirname(DATA_FILE), exist_ok=True)
-        with open(DATA_FILE, "w") as f:
-            json.dump(data, f, indent=2)
-    except Exception as e:
-        print(f"Error saving data: {e}")
+        supabase.table('app_settings').update({'value': api_key, 'updated_at': datetime.now().isoformat()}).eq('key', 'api_key').execute()
+        return True
+    except:
+        return False
 
 def get_user_ip():
     if request.headers.get('X-Forwarded-For'):
@@ -54,15 +42,41 @@ def get_user_ip():
     return request.remote_addr or '127.0.0.1'
 
 def get_or_create_user(ip):
-    data = load_data()
-    if ip not in data["users"]:
-        data["users"][ip] = {
-            "credits": STARTING_CREDITS,
-            "created_at": datetime.now().isoformat(),
-            "searches": []
+    try:
+        response = supabase.table('users').select('*').eq('ip_address', ip).maybeSingle().execute()
+        if response.data:
+            return response.data
+
+        new_user = {
+            'ip_address': ip,
+            'credits': STARTING_CREDITS,
+            'created_at': datetime.now().isoformat(),
+            'updated_at': datetime.now().isoformat()
         }
-        save_data(data)
-    return data["users"][ip]
+        response = supabase.table('users').insert(new_user).execute()
+        return response.data[0] if response.data else new_user
+    except Exception as e:
+        print(f"Error in get_or_create_user: {e}")
+        return {'ip_address': ip, 'credits': STARTING_CREDITS}
+
+def update_user_credits(ip, credits):
+    try:
+        supabase.table('users').update({'credits': credits, 'updated_at': datetime.now().isoformat()}).eq('ip_address', ip).execute()
+        return True
+    except:
+        return False
+
+def add_search(ip, query, query_type):
+    try:
+        supabase.table('searches').insert({
+            'ip_address': ip,
+            'query': query,
+            'query_type': query_type,
+            'created_at': datetime.now().isoformat()
+        }).execute()
+        return True
+    except:
+        return False
 
 @app.route('/')
 def index():
@@ -85,113 +99,109 @@ def serve_static(filename):
 
 @app.route('/api/user-info')
 def user_info():
-    ip = get_user_ip()
-    user = get_or_create_user(ip)
-    return jsonify({
-        "credits": user["credits"],
-        "ip": ip
-    })
+    try:
+        ip = get_user_ip()
+        user = get_or_create_user(ip)
+        return jsonify({
+            "credits": user.get('credits', STARTING_CREDITS),
+            "ip": ip
+        })
+    except Exception as e:
+        return jsonify({"error": str(e), "credits": 0, "ip": "unknown"}), 500
 
 @app.route('/api/search', methods=['POST'])
 def search():
-    ip = get_user_ip()
-    data = load_data()
-
-    if ip not in data["users"]:
-        get_or_create_user(ip)
-        data = load_data()
-
-    user = data["users"][ip]
-
-    if user["credits"] <= 0:
-        return jsonify({
-            "error": "No credits remaining. Please purchase premium plan or use a redeem code."
-        }), 403
-
-    query_text = request.json.get('query', '').strip()
-    query_type = request.json.get('type', 'number')
-
-    if not query_text:
-        return jsonify({"error": "Query cannot be empty"}), 400
-
-    user["credits"] -= CREDIT_COST
-    user["searches"].append({
-        "query": query_text,
-        "type": query_type,
-        "timestamp": datetime.now().isoformat()
-    })
-    save_data(data)
-
-    payload = {
-        "token": data["api_key"],
-        "request": query_text,
-        "limit": 100,
-        "lang": "en"
-    }
-
     try:
+        ip = get_user_ip()
+        user = get_or_create_user(ip)
+
+        if user.get('credits', 0) <= 0:
+            return jsonify({
+                "error": "No credits remaining. Please purchase premium plan or use a redeem code."
+            }), 403
+
+        query_text = request.json.get('query', '').strip()
+        query_type = request.json.get('type', 'number')
+
+        if not query_text:
+            return jsonify({"error": "Query cannot be empty"}), 400
+
+        new_credits = user['credits'] - CREDIT_COST
+        update_user_credits(ip, new_credits)
+        add_search(ip, query_text, query_type)
+
+        api_key = get_api_key()
+        payload = {
+            "token": api_key,
+            "request": query_text,
+            "limit": 100,
+            "lang": "en"
+        }
+
         response = requests.post(API_URL, json=payload, timeout=30)
         result = response.json()
-
-        data = load_data()
-        data["total_searches"] += 1
-        save_data(data)
 
         return jsonify({
             "success": True,
             "data": result,
-            "remaining_credits": user["credits"]
+            "remaining_credits": new_credits
         })
     except Exception as e:
-        data = load_data()
-        data["users"][ip]["credits"] += CREDIT_COST
-        save_data(data)
+        if 'new_credits' not in locals():
+            update_user_credits(ip, user.get('credits', 0) + CREDIT_COST)
         return jsonify({
             "error": f"API Error: {str(e)}"
         }), 500
 
 @app.route('/api/redeem', methods=['POST'])
 def redeem():
-    ip = get_user_ip()
-    code = request.json.get('code', '').strip().upper()
+    try:
+        ip = get_user_ip()
+        code = request.json.get('code', '').strip().upper()
 
-    data = load_data()
+        response = supabase.table('redeem_codes').select('*').eq('code', code).maybeSingle().execute()
 
-    if code not in data["redeem_codes"]:
-        return jsonify({"error": "Invalid redeem code"}), 400
+        if not response.data:
+            return jsonify({"error": "Invalid redeem code"}), 400
 
-    if data["redeem_codes"][code]["used"]:
-        return jsonify({"error": "This code has already been used"}), 400
+        code_data = response.data
 
-    points = data["redeem_codes"][code]["points"]
+        if code_data['used']:
+            return jsonify({"error": "This code has already been used"}), 400
 
-    if ip not in data["users"]:
-        get_or_create_user(ip)
-        data = load_data()
+        points = code_data['points']
+        user = get_or_create_user(ip)
+        new_credits = user.get('credits', STARTING_CREDITS) + points
 
-    data["users"][ip]["credits"] += points
-    data["redeem_codes"][code]["used"] = True
-    data["redeem_codes"][code]["used_by"] = ip
-    data["redeem_codes"][code]["used_at"] = datetime.now().isoformat()
+        update_user_credits(ip, new_credits)
 
-    save_data(data)
+        supabase.table('redeem_codes').update({
+            'used': True,
+            'used_by': ip,
+            'used_at': datetime.now().isoformat()
+        }).eq('code', code).execute()
 
-    return jsonify({
-        "success": True,
-        "points_added": points,
-        "new_credits": data["users"][ip]["credits"]
-    })
+        return jsonify({
+            "success": True,
+            "points_added": points,
+            "new_credits": new_credits
+        })
+    except Exception as e:
+        return jsonify({"error": f"Error: {str(e)}"}), 500
 
 @app.route('/api/admin/login', methods=['POST'])
 def admin_login():
-    username = request.json.get('username', '')
-    password = request.json.get('password', '')
+    try:
+        username = request.json.get('username', '')
+        password = request.json.get('password', '')
 
-    if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
-        session['admin_logged_in'] = True
-        return jsonify({"success": True})
+        if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+            session['admin_logged_in'] = True
+            return jsonify({"success": True})
 
-    return jsonify({"error": "Invalid credentials"}), 401
+        return jsonify({"error": "Invalid credentials"}), 401
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/api/admin/logout', methods=['POST'])
 def admin_logout():
@@ -200,104 +210,116 @@ def admin_logout():
 
 @app.route('/api/admin/stats')
 def admin_stats():
-    if not session.get('admin_logged_in'):
-        return jsonify({"error": "Unauthorized"}), 401
+    try:
+        if not session.get('admin_logged_in'):
+            return jsonify({"error": "Unauthorized"}), 401
 
-    data = load_data()
+        users_response = supabase.table('users').select('credits').execute()
+        searches_response = supabase.table('searches').select('id', count='exact').execute()
+        codes_response = supabase.table('redeem_codes').select('*').execute()
 
-    total_users = len(data["users"])
-    total_searches = data.get("total_searches", 0)
+        total_users = len(users_response.data) if users_response.data else 0
+        total_searches = searches_response.count if hasattr(searches_response, 'count') else 0
 
-    total_credits_given = sum(
-        STARTING_CREDITS for _ in data["users"].keys()
-    )
-    total_credits_redeemed = sum(
-        code["points"] for code in data["redeem_codes"].values() if code["used"]
-    )
-    total_credits_available = sum(user["credits"] for user in data["users"].values())
-    total_credits_used = (total_credits_given + total_credits_redeemed) - total_credits_available
+        total_credits_given = total_users * STARTING_CREDITS
+        total_credits_redeemed = sum(code['points'] for code in codes_response.data if code['used']) if codes_response.data else 0
+        total_credits_available = sum(user['credits'] for user in users_response.data) if users_response.data else 0
+        total_credits_used = (total_credits_given + total_credits_redeemed) - total_credits_available
 
-    return jsonify({
-        "total_users": total_users,
-        "total_searches": total_searches,
-        "total_credits_used": max(0, total_credits_used),
-        "total_redeem_codes": len(data["redeem_codes"]),
-        "used_redeem_codes": sum(1 for code in data["redeem_codes"].values() if code["used"]),
-        "current_api_key": data["api_key"]
-    })
+        total_redeem_codes = len(codes_response.data) if codes_response.data else 0
+        used_redeem_codes = sum(1 for code in codes_response.data if code['used']) if codes_response.data else 0
+
+        return jsonify({
+            "total_users": total_users,
+            "total_searches": total_searches,
+            "total_credits_used": max(0, total_credits_used),
+            "total_redeem_codes": total_redeem_codes,
+            "used_redeem_codes": used_redeem_codes,
+            "current_api_key": get_api_key()
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/api/admin/update-api-key', methods=['POST'])
 def update_api_key():
-    if not session.get('admin_logged_in'):
-        return jsonify({"error": "Unauthorized"}), 401
+    try:
+        if not session.get('admin_logged_in'):
+            return jsonify({"error": "Unauthorized"}), 401
 
-    new_key = request.json.get('api_key', '').strip()
+        new_key = request.json.get('api_key', '').strip()
 
-    if not new_key:
-        return jsonify({"error": "API key cannot be empty"}), 400
+        if not new_key:
+            return jsonify({"error": "API key cannot be empty"}), 400
 
-    data = load_data()
-    data["api_key"] = new_key
-    save_data(data)
-
-    return jsonify({"success": True, "api_key": new_key})
+        if set_api_key(new_key):
+            return jsonify({"success": True, "api_key": new_key})
+        else:
+            return jsonify({"error": "Failed to update API key"}), 500
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/api/admin/generate-code', methods=['POST'])
 def generate_code():
-    if not session.get('admin_logged_in'):
-        return jsonify({"error": "Unauthorized"}), 401
-
-    code_name = request.json.get('code', '').strip().upper()
-    points = request.json.get('points', 0)
-
-    if not code_name:
-        return jsonify({"error": "Code name cannot be empty"}), 400
-
     try:
-        points = int(points)
-        if points <= 0:
-            raise ValueError()
-    except:
-        return jsonify({"error": "Points must be a positive number"}), 400
+        if not session.get('admin_logged_in'):
+            return jsonify({"error": "Unauthorized"}), 401
 
-    data = load_data()
+        code_name = request.json.get('code', '').strip().upper()
+        points = request.json.get('points', 0)
 
-    if code_name in data["redeem_codes"]:
-        return jsonify({"error": "Code already exists"}), 400
+        if not code_name:
+            return jsonify({"error": "Code name cannot be empty"}), 400
 
-    data["redeem_codes"][code_name] = {
-        "points": points,
-        "used": False,
-        "created_at": datetime.now().isoformat()
-    }
+        try:
+            points = int(points)
+            if points <= 0:
+                raise ValueError()
+        except:
+            return jsonify({"error": "Points must be a positive number"}), 400
 
-    save_data(data)
+        existing = supabase.table('redeem_codes').select('code').eq('code', code_name).maybeSingle().execute()
 
-    return jsonify({
-        "success": True,
-        "code": code_name,
-        "points": points
-    })
+        if existing.data:
+            return jsonify({"error": "Code already exists"}), 400
+
+        supabase.table('redeem_codes').insert({
+            'code': code_name,
+            'points': points,
+            'used': False,
+            'created_at': datetime.now().isoformat()
+        }).execute()
+
+        return jsonify({
+            "success": True,
+            "code": code_name,
+            "points": points
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/api/admin/redeem-codes')
 def list_redeem_codes():
-    if not session.get('admin_logged_in'):
-        return jsonify({"error": "Unauthorized"}), 401
+    try:
+        if not session.get('admin_logged_in'):
+            return jsonify({"error": "Unauthorized"}), 401
 
-    data = load_data()
+        response = supabase.table('redeem_codes').select('*').order('created_at', desc=True).execute()
 
-    codes = []
-    for code, info in data["redeem_codes"].items():
-        codes.append({
-            "code": code,
-            "points": info["points"],
-            "used": info["used"],
-            "created_at": info.get("created_at", ""),
-            "used_by": info.get("used_by", ""),
-            "used_at": info.get("used_at", "")
-        })
+        codes = []
+        if response.data:
+            for code_data in response.data:
+                codes.append({
+                    "code": code_data['code'],
+                    "points": code_data['points'],
+                    "used": code_data['used'],
+                    "created_at": code_data.get('created_at', ''),
+                    "used_by": code_data.get('used_by', ''),
+                    "used_at": code_data.get('used_at', '')
+                })
 
-    return jsonify({"codes": codes})
+        return jsonify({"codes": codes})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=False)
