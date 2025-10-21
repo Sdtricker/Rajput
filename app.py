@@ -3,7 +3,7 @@ import json
 import os
 import requests
 from datetime import datetime
-from flask import Flask, request, jsonify, session
+from flask import Flask, request, jsonify, session, send_file
 
 # --- App Setup ---
 app = Flask(__name__)
@@ -66,7 +66,25 @@ def get_or_create_user(ip):
         save_data(data)
     return data["users"][ip]
 
+# --- Page Serving Routes (Static Pages) ---
+# Yeh routes Vercel se aane waali requests ko handle karke html files serve karenge
+
+@app.route('/')
+def index():
+    return send_file('index.html')
+
+@app.route('/premium')
+def premium():
+    return send_file('premium.html')
+
+@app.route('/y92')
+def admin_page():
+    return send_file('admin.html')
+
+
 # --- API Routes ---
+# Yeh aapke backend ka logic hain
+
 @app.route('/api/user-info')
 def user_info():
     ip = get_user_ip()
@@ -127,6 +145,7 @@ def search():
             "remaining_credits": user["credits"]
         })
     except Exception as e:
+        # Agar API fail ho jaaye toh user ki credit wapas kar do
         data = load_data()
         data["users"][ip]["credits"] += CREDIT_COST
         save_data(data)
@@ -192,12 +211,8 @@ def admin_stats():
     total_users = len(data["users"])
     total_searches = data.get("total_searches", 0)
     
-    total_credits_given = sum(
-        STARTING_CREDITS for _ in data["users"].keys()
-    )
-    total_credits_redeemed = sum(
-        code["points"] for code in data["redeem_codes"].values() if code["used"]
-    )
+    total_credits_given = sum(STARTING_CREDITS for _ in data["users"].keys())
+    total_credits_redeemed = sum(code["points"] for code in data["redeem_codes"].values() if code["used"])
     total_credits_available = sum(user["credits"] for user in data["users"].values())
     total_credits_used = (total_credits_given + total_credits_redeemed) - total_credits_available
     
