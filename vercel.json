@@ -1,18 +1,13 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "app.py",
-      "use": "@vercel/python"
-    }
-  ],
   "routes": [
     {
+      "src": "/(.*\\.(css|js|png|jpg|jpeg|gif|svg|ico|html))",
+      "dest": "/$1"
+    },
+    {
       "src": "/(.*)",
-      "dest": "app.py"
+      "dest": "/"
     }
-  ],
-  "env": {
-    "FLASK_ENV": "production"
-  }
+  ]
 }
