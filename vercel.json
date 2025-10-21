@@ -1,48 +1,9 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "app.py",
-      "use": "@vercel/python",
-      "config": {
-        "maxLambdaSize": "50mb",
-        "runtime": "python3.11"
-      }
-    },
-    {
-      "src": "index.html",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "premium.html",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "admin.html",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "Tech_pattern_background_b8ffb99b.png",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "Premium_badge_icon_382f0841.png",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "OSINT_investigation_hero_image_676fd36f.png",
-      "use": "@vercel/static"
-    }
-  ],
   "routes": [
-    { "src": "/(.*)\\.(png|jpg|jpeg|gif|ico)$", "dest": "/$1.$2" },
-    { "src": "/(index|premium|admin)\\.html", "dest": "/$1.html" },
-    { "src": "/api/(.*)", "dest": "app.py" },
-    { "src": "/", "dest": "/index.html" }
-  ],
-  "env": {
-    "SESSION_SECRET": "your-random-secret-key",
-    "ADMIN_USERNAME": "admin",
-    "ADMIN_PASSWORD": "jao0wo383+_(#)"
-  }
+    {
+      "src": "/(.*)",
+      "dest": "/app.py"
+    }
+  ]
 }
