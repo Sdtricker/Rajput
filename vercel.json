@@ -1,9 +1,17 @@
 {
   "version": 2,
+  "builds": [
+    { "src": "app.py", "use": "@vercel/python" },
+    { "src": "*.html", "use": "@vercel/static" },
+    { "src": "*.png", "use": "@vercel/static" }
+  ],
   "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/app.py"
-    }
-  ]
+    { "src": "/api/(.*)", "dest": "app.py" },
+    { "src": "/(.*)", "dest": "/index.html" }
+  ],
+  "env": {
+    "SESSION_SECRET": "random-secret-key",
+    "ADMIN_USERNAME": "admin",
+    "ADMIN_PASSWORD": "jao0wo383+_(#)"
+  }
 }
