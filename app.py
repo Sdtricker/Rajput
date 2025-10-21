@@ -2,63 +2,56 @@
 import json
 import os
 import requests
+import secrets
 from datetime import datetime
-from flask import Flask, request, jsonify, session, send_file, send_from_directory
-from flask_cors import CORS
-import tempfile
+from flask import Flask, request, jsonify, session, send_file
 
 app = Flask(__name__)
-CORS(app)
-app.secret_key = os.environ.get('SESSION_SECRET', 'your-secret-key-here-change-in-production')
+# Vercel environment se secret key lo, warna default use karo
+app.secret_key = os.environ.get('SESSION_SECRET', 'a-very-secure-default-secret-key-change-me')
 
-# Use temp directory for Vercel's serverless environment
-TEMP_DIR = tempfile.gettempdir()
-DATA_FILE = os.path.join(TEMP_DIR, "data.json")
-
+DATA_FILE = "data.json"
 DEFAULT_API_KEY = "7658050410:3GTVV630"
 API_URL = "https://leakosintapi.com/"
 STARTING_CREDITS = 3
 CREDIT_COST = 1
 
+# Admin credentials - hamesha environment variables se hi lena chahiye
 ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'jao0wo383+_(#)')
 
 def load_data():
-    # In Vercel, use environment variables or external database for persistence
-    # This is a temporary solution using memory
-    default_data = {
-        "users": {},
-        "redeem_codes": {},
-        "api_key": os.environ.get('LEAKOSINT_API_KEY', DEFAULT_API_KEY),
-        "total_searches": 0
-    }
-    
-    try:
-        if os.path.exists(DATA_FILE):
-            with open(DATA_FILE, "r") as f:
-                data = json.load(f)
-                if "total_searches" not in data:
-                    data["total_searches"] = 0
-                if "api_key" not in data:
-                    data["api_key"] = os.environ.get('LEAKOSINT_API_KEY', DEFAULT_API_KEY)
-                return data
-    except:
-        pass
-    
-    return default_data
+    if not os.path.exists(DATA_FILE):
+        return {
+            "users": {},
+            "redeem_codes": {},
+            "api_key": os.environ.get('LEAKOSINT_API_KEY', DEFAULT_API_KEY),
+            "total_searches": 0
+        }
+    with open(DATA_FILE, "r") as f:
+        try:
+            data = json.load(f)
+            if "total_searches" not in data:
+                data["total_searches"] = 0
+            if "api_key" not in data:
+                data["api_key"] = os.environ.get('LEAKOSINT_API_KEY', DEFAULT_API_KEY)
+            return data
+        except:
+            return {
+                "users": {},
+                "redeem_codes": {},
+                "api_key": os.environ.get('LEAKOSINT_API_KEY', DEFAULT_API_KEY),
+                "total_searches": 0
+            }
 
 def save_data(data):
-    try:
-        with open(DATA_FILE, "w") as f:
-            json.dump(data, f, indent=2)
-    except:
-        # In serverless, file writes might fail
-        pass
+    with open(DATA_FILE, "w") as f:
+        json.dump(data, f, indent=2)
 
 def get_user_ip():
     if request.headers.get('X-Forwarded-For'):
         return request.headers.get('X-Forwarded-For').split(',')[0]
-    return request.remote_addr or '0.0.0.0'
+    return request.remote_addr
 
 def get_or_create_user(ip):
     data = load_data()
@@ -71,22 +64,20 @@ def get_or_create_user(ip):
         save_data(data)
     return data["users"][ip]
 
-@app.route('/')
-def index():
-    # Serve from static folder
-    return send_from_directory('static', 'index.html')
+# Yeh route ab vercel.json handle karega, isliye hata diya
+# @app.route('/')
+# def index():
+#     return send_file('index.html')
 
-@app.route('/premium')
-def premium():
-    return send_from_directory('static', 'premium.html')
+# @app.route('/premium')
+# def premium():
+#     return send_file('premium.html')
 
-@app.route('/y92')
-def admin_page():
-    return send_from_directory('static', 'admin.html')
-
-@app.route('/static/<path:filename>')
-def serve_static(filename):
-    return send_from_directory('static', filename)
+# @app.route('/<path:filename>')
+# def serve_static(filename):
+#     if filename.endswith('.png') or filename.endswith('.jpg') or filename.endswith('.jpeg'):
+#         return send_file(filename)
+#     return '', 404
 
 @app.route('/api/user-info')
 def user_info():
@@ -125,9 +116,6 @@ def search():
         "type": query_type,
         "timestamp": datetime.now().isoformat()
     })
-    
-    data["users"][ip] = user
-    data["total_searches"] = data.get("total_searches", 0) + 1
     save_data(data)
     
     payload = {
@@ -141,17 +129,19 @@ def search():
         response = requests.post(API_URL, json=payload, timeout=30)
         result = response.json()
         
+        data = load_data()
+        data["total_searches"] += 1
+        save_data(data)
+        
         return jsonify({
             "success": True,
             "data": result,
             "remaining_credits": user["credits"]
         })
     except Exception as e:
-        # Restore credits on error
         data = load_data()
-        if ip in data["users"]:
-            data["users"][ip]["credits"] += CREDIT_COST
-            save_data(data)
+        data["users"][ip]["credits"] += CREDIT_COST
+        save_data(data)
         return jsonify({
             "error": f"API Error: {str(e)}"
         }), 500
@@ -166,7 +156,7 @@ def redeem():
     if code not in data["redeem_codes"]:
         return jsonify({"error": "Invalid redeem code"}), 400
     
-    if data["redeem_codes"][code].get("used", False):
+    if data["redeem_codes"][code]["used"]:
         return jsonify({"error": "This code has already been used"}), 400
     
     points = data["redeem_codes"][code]["points"]
@@ -187,6 +177,10 @@ def redeem():
         "points_added": points,
         "new_credits": data["users"][ip]["credits"]
     })
+
+@app.route('/y92')
+def admin_page():
+    return send_file('admin.html')
 
 @app.route('/api/admin/login', methods=['POST'])
 def admin_login():
@@ -218,7 +212,7 @@ def admin_stats():
         STARTING_CREDITS for _ in data["users"].keys()
     )
     total_credits_redeemed = sum(
-        code["points"] for code in data["redeem_codes"].values() if code.get("used", False)
+        code["points"] for code in data["redeem_codes"].values() if code["used"]
     )
     total_credits_available = sum(user["credits"] for user in data["users"].values())
     total_credits_used = (total_credits_given + total_credits_redeemed) - total_credits_available
@@ -228,7 +222,7 @@ def admin_stats():
         "total_searches": total_searches,
         "total_credits_used": max(0, total_credits_used),
         "total_redeem_codes": len(data["redeem_codes"]),
-        "used_redeem_codes": sum(1 for code in data["redeem_codes"].values() if code.get("used", False)),
+        "used_redeem_codes": sum(1 for code in data["redeem_codes"].values() if code["used"]),
         "current_api_key": data["api_key"]
     })
 
@@ -297,7 +291,7 @@ def list_redeem_codes():
         codes.append({
             "code": code,
             "points": info["points"],
-            "used": info.get("used", False),
+            "used": info["used"],
             "created_at": info.get("created_at", ""),
             "used_by": info.get("used_by", ""),
             "used_at": info.get("used_at", "")
@@ -305,11 +299,7 @@ def list_redeem_codes():
     
     return jsonify({"codes": codes})
 
-# Health check endpoint
-@app.route('/api/health')
-def health():
-    return jsonify({"status": "ok"})
-
-# This is important for Vercel
+# Ye sirf local development ke liye hai, production mein Dockerfile use hota hai
 if __name__ == '__main__':
-    app.run(debug=False)
+    debug_mode = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
+    app.run(host='0.0.0.0', port=5000, debug=debug_mode)
