@@ -2,14 +2,15 @@
 import json
 import os
 import requests
-import secrets
 from datetime import datetime
-from flask import Flask, request, jsonify, session, send_file
+from flask import Flask, request, jsonify, session
 
+# --- App Setup ---
 app = Flask(__name__)
 # Vercel environment se secret key lo, warna default use karo
 app.secret_key = os.environ.get('SESSION_SECRET', 'a-very-secure-default-secret-key-change-me')
 
+# --- Constants ---
 DATA_FILE = "data.json"
 DEFAULT_API_KEY = "7658050410:3GTVV630"
 API_URL = "https://leakosintapi.com/"
@@ -20,6 +21,7 @@ CREDIT_COST = 1
 ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'jao0wo383+_(#)')
 
+# --- Helper Functions ---
 def load_data():
     if not os.path.exists(DATA_FILE):
         return {
@@ -64,21 +66,7 @@ def get_or_create_user(ip):
         save_data(data)
     return data["users"][ip]
 
-# Yeh route ab vercel.json handle karega, isliye hata diya
-# @app.route('/')
-# def index():
-#     return send_file('index.html')
-
-# @app.route('/premium')
-# def premium():
-#     return send_file('premium.html')
-
-# @app.route('/<path:filename>')
-# def serve_static(filename):
-#     if filename.endswith('.png') or filename.endswith('.jpg') or filename.endswith('.jpeg'):
-#         return send_file(filename)
-#     return '', 404
-
+# --- API Routes ---
 @app.route('/api/user-info')
 def user_info():
     ip = get_user_ip()
@@ -177,10 +165,6 @@ def redeem():
         "points_added": points,
         "new_credits": data["users"][ip]["credits"]
     })
-
-@app.route('/y92')
-def admin_page():
-    return send_file('admin.html')
 
 @app.route('/api/admin/login', methods=['POST'])
 def admin_login():
@@ -298,8 +282,3 @@ def list_redeem_codes():
         })
     
     return jsonify({"codes": codes})
-
-# Ye sirf local development ke liye hai, production mein Dockerfile use hota hai
-if __name__ == '__main__':
-    debug_mode = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
-    app.run(host='0.0.0.0', port=5000, debug=debug_mode)
